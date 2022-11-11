@@ -1,7 +1,14 @@
 ---
+title: "backupGov50projRMD"
+author: "Arjun Akwei"
+date: "11/10/2022"
+output: html_document
+---
+
+---
 title: "Gov 50 Final Project"
-author: "Your Name Here"
-description: "My final project"
+author: "Arjun Akwei"
+description: "The Effect of EU Membership On Economic Development"
 output:
   distill::distill_article:
     self_contained: false
@@ -11,4 +18,101 @@ output:
 
 ## Project thoughts
 
-I am interested in exploring data related to...
+I am interested in exploring how determining whether membership in a liberal international organization such as the EU has caused new member countries to develop economically in a significant way. Between 1990 and 2005 several former Soviet sphere countries were making the decision of whether or not to join the EU, and many EU members and allies hoped that their joining would promote liberalization and development. I am curious to assess whether such an impact was seen. 
+
+My plan is to curate a sample of countries from the "Eastern Bloc" that joined the EU in the same year, and map years spent in EU against their annual scores on the UN's Human Development Index. I would then conduct a difference in difference analysis using a sample of countries from that bloc that chose not to join the EU to determine the treatment effect of EU membership.
+
+**Sample of Eastern Bloc countries now in EU**  
+- Poland 2004  
+- Czech Republic 2004  
+- Estonia 2004  
+- Hungary 2004  
+- Slovakia 2004  
+**Sample of Eastern bloc countries NOT in EU**  
+- Albania  
+- Moldova  
+- Ukraine  
+- Belarus  
+- Georgia  
+
+## Research Proposal
+In this study, I hope to explore whether membership in a liberal international organization such as the EU has caused new member countries to develop economically in a significant way. I hypothesize, new requirements for member liberalization, facilitated integration into the global economy, and direct support from the organization itself, among other factors, cause member organizations to develop at rates far faster than they would have without joining. The explanatory variable in this case is time spent as a member in a liberal international organization (specifically in this case the EU), something measured in years since being granted membership (in 2004). A separate set of countries from the same region that did NOT join the EU will be established as a comparative to isolate the difference. The outcome variable I will be tracking is liberalism, as quantified by the UN's Human Development Index. This is an annual evaluation of how developed a given country is. I expect that over time most of these countries will have trended towards becoming more developed, but a difference-in-difference analysis will reveal whether the explanatory had some additional effect. If the difference-in-difference analysis indicates a higher rate of development in member countries vs non-member countries, this will suggest that time spent within the EU is positively related to development, proving the hypothesis correct. No difference or a negative relationship would disprove the hypothesis. 
+
+
+```{r DataPrepping}
+library(tidyverse)
+Albania <- read_csv("Albania.csv")
+Belarus <- read_csv("Belarus.csv")
+Czechia <- read_csv("Czechia.csv")
+Estonia <- read_csv("Estonia.csv")
+Georgia <- read_csv("Georgia.csv")
+Hungary <- read_csv("Hungary.csv")
+Moldova <- read_csv("Moldova (Republic of).csv")
+Poland <- read_csv("Poland.csv")
+Slovakia <- read_csv("Slovakia.csv")
+Ukraine <- read_csv("Ukraine.csv")
+
+```
+
+```{r slicing}
+
+Albania_slice <- Albania |>
+  slice(19:37) |>
+  mutate(HDI_index = value,
+         country = "Albania") |>
+  select(c(key, HDI_index, country))
+Albania_slice
+
+country_slice <- function(country) {
+  country_slice <- slice(country, 19:37) |>
+    mutate(HDI_index = value) |>
+    select(c(key, HDI_index))
+  return(country_slice)
+}
+
+Belarus_slice <- country_slice(Belarus) |>
+  mutate(country = "Belarus")
+Czechia_slice <- country_slice(Czechia) |>
+  mutate(country = "Czechia")
+Estonia_slice <- country_slice(Estonia) |>
+  mutate(country = "Estonia")
+Georgia_slice <- country_slice(Georgia) |>
+  mutate(country = "Georgia")
+Hungary_slice <- country_slice(Hungary) |>
+  mutate(country = "Hungary")
+Moldova_slice <- country_slice(Moldova) |>
+  mutate(country = "Moldova")
+Poland_slice <- country_slice(Poland) |>
+  mutate(country = "Poland")
+Slovakia_slice <- country_slice(Slovakia) |>
+  mutate(country = "Slovakia")
+Ukraine_slice <- country_slice(Ukraine) |>
+  mutate(country = "Ukraine")
+```
+
+```{r joining}
+two_count <- rbind(Albania_slice, Belarus_slice)
+two_count
+
+HDI <- rbind(two_count, Czechia_slice, Estonia_slice, Georgia_slice, Hungary_slice, Moldova_slice, Poland_slice, Slovakia_slice, Ukraine_slice)
+HDI
+
+```
+
+```{r classifying}
+HDI_classified <- HDI |>
+  mutate(EU = if_else(country %in% c("Poland", "Czechia", "Estonia", "Hungary", "Slovakia"), "Member","Non-Member"),
+         year = substring(key, 34,37)) |>
+  group_by(country,EU)
+```
+
+```{r fig.width = 11, fig.height = 14}
+comparative_graph <- HDI_classified |>
+  ggplot(aes(x = year, y = HDI_index, color = EU)) +
+  geom_line(aes(group=country)) +
+  labs(x = "Year", y = "HDI", title = "Comparative HDI Growth")
+
+comparative_graph
+  
+
+```
