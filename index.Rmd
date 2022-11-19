@@ -100,10 +100,14 @@ HDI
 ```
 
 ```{r classifying}
+HDI$HDI_index <- as.numeric(as.character(HDI$HDI_index))
+
 HDI_classified <- HDI |>
   mutate(EU = if_else(country %in% c("Poland", "Czechia", "Estonia", "Hungary", "Slovakia"), "Member","Non-Member"),
          year = substring(key, 34,37)) |>
-  group_by(country,EU)
+  group_by(country,EU) |>
+  select(year, country, HDI_index, EU)
+HDI_classified
 ```
 
 ```{r fig.width = 11, fig.height = 14}
@@ -116,3 +120,22 @@ comparative_graph
   
 
 ```
+
+```{r analyses}
+comparative_analysis <- HDI_classified |>
+  group_by(year, EU) |>
+  summarize(mean_HDI = mean(HDI_index))
+comparative_analysis
+
+avg_plot <- comparative_analysis |>
+  ggplot(aes(x = year, y = mean_HDI, color = EU)) +
+  geom_line(aes(group=EU)) +
+  labs(x = "Year", y = "HDI", title = "Comparative HDI Growth")
+avg_plot
+
+library(broom)
+fit_1 <- lm(mean_HDI ~ EU, data = comparative_analysis)
+fit_1
+```
+## Analysis
+Based on the regression I have run which yielded a coefficient value of EUNon-Member -0.08611, being a non member resulted in lower HDI indexes. To further this analysis I would like to create a for loop to add a growth column and run regressions using that. This will hopefully add more detail and accuracy to my analyses.
