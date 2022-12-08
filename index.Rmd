@@ -57,14 +57,14 @@ Ukraine <- read_csv("Ukraine.csv")
 ```{r slicing}
 
 Albania_slice <- Albania |>
-  slice(19:37) |>
+  slice(6:37) |>
   mutate(HDI_index = value,
          country = "Albania") |>
   select(c(key, HDI_index, country))
 Albania_slice
 
 country_slice <- function(country) {
-  country_slice <- slice(country, 19:37) |>
+  country_slice <- slice(country, 6:37) |>
     mutate(HDI_index = value) |>
     select(c(key, HDI_index))
   return(country_slice)
@@ -103,14 +103,15 @@ HDI
 HDI$HDI_index <- as.numeric(as.character(HDI$HDI_index))
 
 HDI_classified <- HDI |>
-  mutate(EU = if_else(country %in% c("Poland", "Czechia", "Estonia", "Hungary", "Slovakia"), "Member","Non-Member"),
+  mutate(EU = if_else(country %in% c("Poland", "Czechia", "Estonia", "Hungary", "Slovakia"), 1,0),
          year = substring(key, 34,37)) |>
   group_by(country,EU) |>
   select(year, country, HDI_index, EU)
 HDI_classified
+
 ```
 
-```{r fig.width = 11, fig.height = 14}
+```{r fig.width = 11, fig.height = 4}
 comparative_graph <- HDI_classified |>
   ggplot(aes(x = year, y = HDI_index, color = EU)) +
   geom_line(aes(group=country)) +
@@ -121,10 +122,10 @@ comparative_graph
 
 ```
 
-```{r analyses}
+```{r fig.width = 11, fig.height = 3}
 comparative_analysis <- HDI_classified |>
   group_by(year, EU) |>
-  summarize(mean_HDI = mean(HDI_index))
+  summarize(mean_HDI = mean(HDI_index, na.rm = TRUE))
 comparative_analysis
 
 avg_plot <- comparative_analysis |>
@@ -133,9 +134,16 @@ avg_plot <- comparative_analysis |>
   labs(x = "Year", y = "HDI", title = "Comparative HDI Growth")
 avg_plot
 
-library(broom)
-fit_1 <- lm(mean_HDI ~ EU, data = comparative_analysis)
-fit_1
+#Diff in Diff
+comparative_analysis$time = ifelse(comparative_analysis$year >=2004, 1, 0)
+comparative_analysis$did = comparative_analysis$time * comparative_analysis$EU
+
+didreg = lm(mean_HDI ~ EU + time +did, data = comparative_analysis)
+summary(didreg)
 ```
 ## Analysis
-Based on the regression I have run which yielded a coefficient value of EUNon-Member -0.08611, being a non member resulted in lower HDI indexes. To further this analysis I would like to create a for loop to add a growth column and run regressions using that. This will hopefully add more detail and accuracy to my analyses.
+To test my hypothesis I used a difference in differences analysis, assuming that given all of the countries were from the Soviet aligned Eastern Bloc they made good peers. This is supported by their convergent HDI scores pre-2004. Based on the difference in differences analysis I ran, the coefficients yielded were 0.0007643 and 0.0123717 for the estimate and standard error respectively. This would suggest that EU membership does have a positive impact on HDI growth, slight as it may be. This regression controls for ...
+
+
+??for second variable, find democracy score for each country in each year (from LDI)??
+^^ Is this necessary based on the regression I ran above that seemingly has other variables in the regression to generate the diff in diff analysis?
