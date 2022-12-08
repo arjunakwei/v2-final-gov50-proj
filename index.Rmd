@@ -16,11 +16,11 @@ output:
 
 
 
-## Project thoughts
+## Introduction
 
-I am interested in exploring how determining whether membership in a liberal international organization such as the EU has caused new member countries to develop economically in a significant way. Between 1990 and 2005 several former Soviet sphere countries were making the decision of whether or not to join the EU, and many EU members and allies hoped that their joining would promote liberalization and development. I am curious to assess whether such an impact was seen. 
+For this project I explored how determining whether membership in a liberal international organization such as the EU has caused new member countries to develop economically in a significant way. Between 1990 and 2005 several former Soviet sphere countries were making the decision of whether or not to join the EU, and many EU members and allies listed greater economic development as a key selling point of joining. I was curious to assess whether such an impact was seen. 
 
-My plan is to curate a sample of countries from the "Eastern Bloc" that joined the EU in the same year, and map years spent in EU against their annual scores on the UN's Human Development Index. I would then conduct a difference in difference analysis using a sample of countries from that bloc that chose not to join the EU to determine the treatment effect of EU membership.
+My project curated a sample of countries from the "Eastern Bloc" that joined the EU in the same year, and mapped years spent in EU against their annual scores on the UN's Human Development Index. I then conduct a difference in difference analysis using a sample of countries from that bloc that chose not to join the EU as a control group to determine the economic treatment effect of EU membership.
 
 **Sample of Eastern Bloc countries now in EU**  
 - Poland 2004  
@@ -35,8 +35,10 @@ My plan is to curate a sample of countries from the "Eastern Bloc" that joined t
 - Belarus  
 - Georgia  
 
-## Research Proposal
-In this study, I hope to explore whether membership in a liberal international organization such as the EU has caused new member countries to develop economically in a significant way. I hypothesize, new requirements for member liberalization, facilitated integration into the global economy, and direct support from the organization itself, among other factors, cause member organizations to develop at rates far faster than they would have without joining. The explanatory variable in this case is time spent as a member in a liberal international organization (specifically in this case the EU), something measured in years since being granted membership (in 2004). A separate set of countries from the same region that did NOT join the EU will be established as a comparative to isolate the difference. The outcome variable I will be tracking is liberalism, as quantified by the UN's Human Development Index. This is an annual evaluation of how developed a given country is. I expect that over time most of these countries will have trended towards becoming more developed, but a difference-in-difference analysis will reveal whether the explanatory had some additional effect. If the difference-in-difference analysis indicates a higher rate of development in member countries vs non-member countries, this will suggest that time spent within the EU is positively related to development, proving the hypothesis correct. No difference or a negative relationship would disprove the hypothesis. 
+## Hypothesis and discussion of data
+I hypothesized, facilitated integration into the global economy, as well as direct support from the EU itself, would cause member organizations to develop at rates far faster than they would have without joining. The explanatory variable in this case is time spent as a member of the EU, something measured in years since being granted membership in 2004. A separate set of countries from the same region that did NOT join the EU will be established as a comparative to isolate the difference. The outcome variable I will be tracking is economic development, as quantified by the UN's Human Development Index. This is an annual evaluation of how developed a given country is. It incorporates the following factors: life expectancy at birth, mean of years of schooling for adults aged 25 years and more, expected years of schooling for children of school entering age, and gross national income per capita. The data is published for each country as far back as 1990, but I had to combine these country data-sets into one in order to perform my analysis.
+
+Rather than simply assessing growth since joining, I chose to conduct a difference in differences analysis to isolate the impact of EU membership from the impact of year on year growth. I expected that over time most of these countries will have trended towards becoming more developed, but a difference-in-differences analysis will reveal whether the explanatory had some additional effect. If the difference-in-differences analysis indicates a higher rate of development in member countries vs non-member countries, this will suggest that time spent within the EU is positively related to development, proving the hypothesis correct. No significant difference or a negative relationship would disprove the hypothesis. 
 
 
 ```{r DataPrepping}
@@ -110,7 +112,7 @@ HDI_classified <- HDI |>
 HDI_classified
 
 ```
-
+## Graph 1: Country HDI 1990-2021 (categorized by EU membership)
 ```{r fig.width = 11, fig.height = 4}
 comparative_graph <- HDI_classified |>
   ggplot(aes(x = year, y = HDI_index, color = EU)) +
@@ -121,7 +123,7 @@ comparative_graph
   
 
 ```
-
+## Graph 2: Aggregated HDI scores over time (EU vs Non-EU)
 ```{r fig.width = 11, fig.height = 3}
 comparative_analysis <- HDI_classified |>
   group_by(year, EU) |>
@@ -133,7 +135,10 @@ avg_plot <- comparative_analysis |>
   geom_line(aes(group=EU)) +
   labs(x = "Year", y = "HDI", title = "Comparative HDI Growth")
 avg_plot
+```
 
+## Regression: Difference in Differences
+```{r did}
 #Diff in Diff
 comparative_analysis$time = ifelse(comparative_analysis$year >=2004, 1, 0)
 comparative_analysis$did = comparative_analysis$time * comparative_analysis$EU
@@ -141,9 +146,17 @@ comparative_analysis$did = comparative_analysis$time * comparative_analysis$EU
 didreg = lm(mean_HDI ~ EU + time +did, data = comparative_analysis)
 summary(didreg)
 ```
-## Analysis
-To test my hypothesis I used a difference in differences analysis, assuming that given all of the countries were from the Soviet aligned Eastern Bloc they made good peers. This is supported by their convergent HDI scores pre-2004. Based on the difference in differences analysis I ran, the coefficients yielded were 0.0007643 and 0.0123717 for the estimate and standard error respectively. This would suggest that EU membership does have a positive impact on HDI growth, slight as it may be. This regression controls for ...
 
 
-??for second variable, find democracy score for each country in each year (from LDI)??
-^^ Is this necessary based on the regression I ran above that seemingly has other variables in the regression to generate the diff in diff analysis?
+## Results and Analysis
+To test my hypothesis I used a difference in differences analysis, assuming that since all of the countries were from the Soviet aligned Eastern Bloc they made good peers. This is supported by their relatively convergent HDI scores pre-2004. To conduct this analysis, several steps were taken. First, I created a dummy variable that would reflect treatment starting at 2004. Second I created a did variable that is the interaction between time and treatment which would be "did" or difference in differences.From there I ran the regression, and the coefficient for did  is the differences-in-differences estimator. 
+
+Based on the difference in differences analysis I ran, the coefficients yielded for did were 0.0007643 and 0.0123717 for the estimate and standard error respectively. This estimator suggests that EU members year-on-year saw an additional 0.076% growth in HDI compared to the control group of non-EU countries. This would suggest that EU membership does have a positive, though slight, impact on HDI growth beyond what would be seen in normal year-on-year progress. The standard error for the did estimator, however, is 1.2%. Since this error is large relative to the statistic measured itself, these results are not statistically significant. This would mean that we would not be able to reject a null hypothesis that there was no significant difference in HDI growth between the treatment and control groups. Relatedly, this impact is significantly smaller than the time coefficient, suggesting that year-over-year progress regardless of EU membership was the bigger driver of HDI growth.
+
+Had there been a significant effect observed, the difference in differences analysis would strengthen the argument for that effect being causal rather than just correlational because the analysis isolated EU impact from year-on-year change that would have been the primary confounder. Because no effect was measured though, this distinction is of little significance.
+
+## Conclusion
+To circle back to the initial question posed (whether EU membership accelerated growth rates for its members compared to non-members), it seems the promises made by the EU fell short. Ultimately the EU did not significantly increase rates of HDI growth. This is not to say that there were no positive impacts to joining-- there is plenty of evidence to suggest that EU membership improved respect for civil liberties relative to non-members, as well as provided support in times of economic crisis (displayed partially by the smaller dip in HDI during the 2008-2009 global recession), but the impact I hypothesized did not appear in the results.
+
+This study was limited in that the countries I chose as the control group were imperfect foils to the treatment group. Though their HDIs were closer pre 1991, there was already a difference in HDI to start that may have impacted my findings. Perhaps if compared to a more similar control, clearer results would have been found. Thus, one improvement to make would be doing a more sophisticated selection of countries beyond my sorting of Soviet Eastern Bloc countries.
+
