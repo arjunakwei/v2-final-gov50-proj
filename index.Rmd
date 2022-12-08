@@ -41,7 +41,7 @@ I hypothesized, facilitated integration into the global economy, as well as dire
 Rather than simply assessing growth since joining, I chose to conduct a difference in differences analysis to isolate the impact of EU membership from the impact of year on year growth. I expected that over time most of these countries will have trended towards becoming more developed, but a difference-in-differences analysis will reveal whether the explanatory had some additional effect. If the difference-in-differences analysis indicates a higher rate of development in member countries vs non-member countries, this will suggest that time spent within the EU is positively related to development, proving the hypothesis correct. No significant difference or a negative relationship would disprove the hypothesis. 
 
 
-```{r DataPrepping}
+```{r include= FALSE}
 library(tidyverse)
 Albania <- read_csv("Albania.csv")
 Belarus <- read_csv("Belarus.csv")
@@ -56,7 +56,7 @@ Ukraine <- read_csv("Ukraine.csv")
 
 ```
 
-```{r slicing}
+```{r slicing, include= FALSE}
 
 Albania_slice <- Albania |>
   slice(6:37) |>
@@ -92,7 +92,7 @@ Ukraine_slice <- country_slice(Ukraine) |>
   mutate(country = "Ukraine")
 ```
 
-```{r joining}
+```{r joining, include= FALSE}
 two_count <- rbind(Albania_slice, Belarus_slice)
 two_count
 
@@ -101,7 +101,7 @@ HDI
 
 ```
 
-```{r classifying}
+```{r classifying, include= FALSE}
 HDI$HDI_index <- as.numeric(as.character(HDI$HDI_index))
 
 HDI_classified <- HDI |>
@@ -113,7 +113,7 @@ HDI_classified
 
 ```
 ## Graph 1: Country HDI 1990-2021 (categorized by EU membership)
-```{r fig.width = 11, fig.height = 4}
+```{r fig.width = 11, fig.height = 4, echo= FALSE}
 comparative_graph <- HDI_classified |>
   ggplot(aes(x = year, y = HDI_index, color = EU)) +
   geom_line(aes(group=country)) +
@@ -123,13 +123,17 @@ comparative_graph
   
 
 ```
+
 ## Graph 2: Aggregated HDI scores over time (EU vs Non-EU)
-```{r fig.width = 11, fig.height = 3}
+```{r, include=FALSE}
 comparative_analysis <- HDI_classified |>
   group_by(year, EU) |>
   summarize(mean_HDI = mean(HDI_index, na.rm = TRUE))
 comparative_analysis
+```
 
+
+```{r fig.width = 11, fig.height = 3, echo=FALSE}
 avg_plot <- comparative_analysis |>
   ggplot(aes(x = year, y = mean_HDI, color = EU)) +
   geom_line(aes(group=EU)) +
@@ -138,7 +142,7 @@ avg_plot
 ```
 
 ## Regression: Difference in Differences
-```{r did}
+```{r did, echo = FALSE}
 #Diff in Diff
 comparative_analysis$time = ifelse(comparative_analysis$year >=2004, 1, 0)
 comparative_analysis$did = comparative_analysis$time * comparative_analysis$EU
@@ -159,4 +163,9 @@ Had there been a significant effect observed, the difference in differences anal
 To circle back to the initial question posed (whether EU membership accelerated growth rates for its members compared to non-members), it seems the promises made by the EU fell short. Ultimately the EU did not significantly increase rates of HDI growth. This is not to say that there were no positive impacts to joining-- there is plenty of evidence to suggest that EU membership improved respect for civil liberties relative to non-members, as well as provided support in times of economic crisis (displayed partially by the smaller dip in HDI during the 2008-2009 global recession), but the impact I hypothesized did not appear in the results.
 
 This study was limited in that the countries I chose as the control group were imperfect foils to the treatment group. Though their HDIs were closer pre 1991, there was already a difference in HDI to start that may have impacted my findings. Perhaps if compared to a more similar control, clearer results would have been found. Thus, one improvement to make would be doing a more sophisticated selection of countries beyond my sorting of Soviet Eastern Bloc countries.
+
+
+
+
+
 
