@@ -8,7 +8,7 @@ output: html_document
 ---
 title: "Gov 50 Final Project"
 author: "Arjun Akwei"
-description: "The Effect of EU Membership On Economic Development"
+description: "The Effect of EU Membership on Economic Development"
 output:
   distill::distill_article:
     self_contained: false
@@ -18,7 +18,7 @@ output:
 
 ## Introduction
 
-For this project I explored how determining whether membership in a liberal international organization such as the EU has caused new member countries to develop economically in a significant way. Between 1990 and 2005 several former Soviet sphere countries were making the decision of whether or not to join the EU, and many EU members and allies listed greater economic development as a key selling point of joining. I was curious to assess whether such an impact was seen. 
+For this project I explored how determining whether membership in a liberal international organization such as the EU has caused new member countries to develop economically in a significant way. Between 1990 and 2005 several former Soviet sphere countries were making the decision of whether or not to join the EU, and many EU members and allies listed greater economic development as a key selling point of joining. I was curious to assess whether such an impact was really seen. 
 
 My project curated a sample of countries from the "Eastern Bloc" that joined the EU in the same year, and mapped years spent in EU against their annual scores on the UN's Human Development Index. I then conduct a difference in difference analysis using a sample of countries from that bloc that chose not to join the EU as a control group to determine the economic treatment effect of EU membership.
 
