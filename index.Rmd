@@ -105,17 +105,19 @@ HDI
 HDI$HDI_index <- as.numeric(as.character(HDI$HDI_index))
 
 HDI_classified <- HDI |>
+  mutate(EU_member = if_else(country %in% c("Poland", "Czechia", "Estonia", "Hungary", "Slovakia"), "yes","no"),
+         year = substring(key, 34,37)) |>
   mutate(EU = if_else(country %in% c("Poland", "Czechia", "Estonia", "Hungary", "Slovakia"), 1,0),
          year = substring(key, 34,37)) |>
   group_by(country,EU) |>
-  select(year, country, HDI_index, EU)
+  select(year, country, HDI_index, EU, EU_member)
 HDI_classified
 
 ```
 ## Graph 1: Country HDI 1990-2021 (categorized by EU membership)
 ```{r fig.width = 11, fig.height = 4, echo= FALSE}
 comparative_graph <- HDI_classified |>
-  ggplot(aes(x = year, y = HDI_index, color = EU)) +
+  ggplot(aes(x = year, y = HDI_index, color = EU_member)) +
   geom_line(aes(group=country)) +
   labs(x = "Year", y = "HDI", title = "Comparative HDI Growth")
 
@@ -127,7 +129,7 @@ comparative_graph
 ## Graph 2: Aggregated HDI scores over time (EU vs Non-EU)
 ```{r, include=FALSE}
 comparative_analysis <- HDI_classified |>
-  group_by(year, EU) |>
+  group_by(year, EU_member, EU) |>
   summarize(mean_HDI = mean(HDI_index, na.rm = TRUE))
 comparative_analysis
 ```
@@ -135,8 +137,8 @@ comparative_analysis
 
 ```{r fig.width = 11, fig.height = 3, echo=FALSE}
 avg_plot <- comparative_analysis |>
-  ggplot(aes(x = year, y = mean_HDI, color = EU)) +
-  geom_line(aes(group=EU)) +
+  ggplot(aes(x = year, y = mean_HDI, color = EU_member)) +
+  geom_line(aes(group=EU_member)) +
   labs(x = "Year", y = "HDI", title = "Comparative HDI Growth")
 avg_plot
 ```
